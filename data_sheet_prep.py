@@ -24,20 +24,20 @@ def get_features(file):
 
 
 def make_data_sheets():
-    features = get_features("features_all.pkl")
+    features = get_features("features_low_dim.pkl")
     labels = get_labels("split_genres.pkl")
 
     feature_sheet = []
     label_sheet = []
     for n, label in enumerate(labels.keys()):
-        f_row = [n, features[label]]
+        f_row = [n] + list(features[label])
         l_row = [n, label, labels[label]]
 
         feature_sheet.append(f_row)
         label_sheet.append(l_row)
 
     # write both sheets to a tsv file
-    with open("features.tsv", "w", encoding='utf-8') as f:
+    with open("features_low_dim.tsv", "w", encoding='utf-8') as f:
         for row in feature_sheet:
             f.write("\t".join([str(x) for x in row]) + "\n")
 
@@ -45,6 +45,7 @@ def make_data_sheets():
         with open("labels.tsv", "w", encoding='utf-8') as f:
             for row in label_sheet:
                 f.write("\t".join([str(x) for x in row]) + "\n")
+
     except:
         print(row)
         sys.exit(1)

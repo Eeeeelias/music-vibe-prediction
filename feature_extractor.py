@@ -19,25 +19,28 @@ audio_file = "P:\Music\Music\Bloodborne\『Bloodborne』 オリジナルサウ�
 y, sr = librosa.load(audio_file)
 
 
-def dynamics(y, hop=128) -> list:
+def dynamics(y, hop=128, single=False) -> list:
     # Calculate the RMS amplitude
     rms_amplitude = librosa.feature.rms(y=y, hop_length=hop)
 
     # Convert RMS to decibels (dB)
     rms_amplitude_db = librosa.amplitude_to_db(rms_amplitude)
 
-    return rms_amplitude_db.tolist()[0]
+    if not single:
+        return rms_amplitude_db.tolist()[0]
+    return [rms_amplitude_db.mean()]
 
-
-def tempo(y, sr, hop=128):
+def tempo(y, sr, hop=128, single=False):
     # Calculate the tempo of y
     tempo = librosa.feature.tempo(y=y, sr=sr, hop_length=hop, aggregate=None)
 
-    return tempo
+    if not single:
+        return tempo
+    return [tempo.mean()]
 
 
 
-def pitch(y, sr, hop=128):
+def pitch(y, sr, hop=128, single=False):
     # Calculate the pitch
     pitches, magnitudes = librosa.piptrack(y=y, sr=sr, hop_length=hop)
 
@@ -47,14 +50,18 @@ def pitch(y, sr, hop=128):
     # Convert the mean pitch per frame into Hz
     pitches_in_hz = librosa.hz_to_midi(mean_pitch)
 
-    return pitches_in_hz
+    if not single:
+        return pitches_in_hz
+    return [pitches_in_hz.mean()]
 
-def chroma(y, sr, hop=128):
+def chroma(y, sr, hop=128, single=False):
     chroma = librosa.feature.chroma_stft(y=y, sr=sr, hop_length=hop)
 
-    chroma = chroma.flatten()
-    return chroma
-
+    if not single:
+        chroma = chroma.flatten()
+        return chroma
+    chroma = chroma.mean(axis=1)
+    return chroma.flatten()
 
 def set_all(file):
     # Load audio file with sample rate
@@ -62,12 +69,11 @@ def set_all(file):
 
     hop_length = len(y) // 128
 
-    features = dynamics(y, hop=hop_length)
-    # Calculate several features
     try:
-        features.extend(tempo(y, sr, hop=hop_length))
-        features.extend(pitch(y, sr, hop=hop_length))
-        features.extend(chroma(y, sr, hop=hop_length))
+        features = dynamics(y, hop=hop_length, single=True)
+        features.extend(tempo(y, sr, hop=hop_length, single=True))
+        features.extend(pitch(y, sr, hop=hop_length, single=True))
+        features.extend(chroma(y, sr, hop=hop_length, single=True))
         features = np.array(features)
     except:
         features = 0
@@ -132,4 +138,4 @@ if __name__ == '__main__':
 
     # Combine results from all chunks
     combined_results = [result for sublist in results_list for result in sublist]
-    pickle.dump(combined_results, open("features_all.pkl", "wb"))
+    pickle.dump(combined_results, open("features_low_dim.pkl", "wb"))
