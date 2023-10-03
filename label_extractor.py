@@ -178,5 +178,3 @@ if __name__ == "__main__":
 
     pickle.dump(genres, open("split_genres.pkl", "wb"))
     print(genres.keys())
-    features = pickle.load(open("features.pkl", "rb"))
-    print(features[:5])

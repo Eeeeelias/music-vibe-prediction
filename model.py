@@ -6,7 +6,7 @@ import sklearn.ensemble
 from matplotlib import pyplot as plt
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
 from sklearn.model_selection import KFold
 from sklearn.neural_network import MLPClassifier
 
@@ -16,8 +16,8 @@ def dummy(X_train, X_test, y_train, y_test):
     model = DummyClassifier(strategy='prior')
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
-    print("Dummy accuracy: ", accuracy_score(y_test, y_pred))
-    print(f"Dummy F1 score: {sklearn.metrics.f1_score(y_test, y_pred, average='weighted'):2f}")
+    print(f"Dummy accuracy: {accuracy_score(y_test, y_pred):.2f}")
+    print(f"Dummy F1 score: {f1_score(y_test, y_pred, average='weighted'):.2f}")
 
 
 def set_classifier(option="random_forest"):
@@ -26,7 +26,7 @@ def set_classifier(option="random_forest"):
     if option == "random_forest":
         classifier = RandomForestClassifier(n_estimators=100)
     elif option == "mlp":
-        classifier = MLPClassifier(hidden_layer_sizes=(30, 12), max_iter=500, alpha=0.0001,)
+        classifier = MLPClassifier(hidden_layer_sizes=(100,), max_iter=500, alpha=0.0001,)
     elif option == "ada_boost":
         classifier = AdaBoostClassifier(n_estimators=100)
     elif option == "svm":
@@ -54,7 +54,7 @@ def train(classifier, X, y):
 
         # Evaluate the model on the test data and store the score
         y_pred = model.predict(X_test)
-        score = sklearn.metrics.f1_score(y_test, y_pred, average='weighted')
+        score = f1_score(y_test, y_pred, average='weighted')
 
         cv_scores.append(score)
 
@@ -63,13 +63,13 @@ def train(classifier, X, y):
             best_clf = model
 
     average_score = sum(cv_scores) / len(cv_scores)
-    print("Average score:", average_score)
+    print(f"Average score: {average_score:.2f}")
 
     # Save the model
     pickle.dump(best_clf, open("model.pkl", "wb"))
 
     # Print the accuracy
-    print("Accuracy of the best classifier on train:", accuracy_score(y, best_clf.predict(X)))
+    print(f"Accuracy of the best classifier on train: {accuracy_score(y, best_clf.predict(X)):.2f}")
 
 
 def test_classifier(test_features, test_labels):
@@ -78,8 +78,8 @@ def test_classifier(test_features, test_labels):
     y_pred = classifier.predict(test_features)
 
     # Print the accuracy
-    print("Accuracy of the classifier on test:", accuracy_score(test_labels, y_pred))
-    print("F1 score on the test set:", sklearn.metrics.f1_score(test_labels, y_pred, average='weighted'))
+    print(f"Accuracy of the classifier on test: {accuracy_score(test_labels, y_pred):.2f}")
+    print(f"F1 score on the test set: {f1_score(test_labels, y_pred, average='weighted'):.2f}")
 
     # plot a heatmap of the test results
     cm = confusion_matrix(test_labels, y_pred)

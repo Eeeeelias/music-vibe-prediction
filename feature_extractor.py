@@ -6,6 +6,7 @@ import pickle
 import librosa
 import librosa.display
 import matplotlib.pyplot as plt
+import numpy as np
 from tqdm import tqdm
 import warnings
 
@@ -18,31 +19,60 @@ audio_file = "P:\Music\Music\Bloodborne\『Bloodborne』 オリジナルサウ�
 y, sr = librosa.load(audio_file)
 
 
-def loudness_db(y):
+def dynamics(y, hop=128) -> list:
     # Calculate the RMS amplitude
-    rms_amplitude = librosa.feature.rms(y=y)
+    rms_amplitude = librosa.feature.rms(y=y, hop_length=hop)
 
     # Convert RMS to decibels (dB)
     rms_amplitude_db = librosa.amplitude_to_db(rms_amplitude)
 
-    # Print the loudness in dB
-    min_loudness_db = rms_amplitude_db.min()
-    mean_loudness_db = rms_amplitude_db.mean()
-    max_loudness_db = rms_amplitude_db.max()
-
-    return [min_loudness_db, mean_loudness_db, max_loudness_db]
+    return rms_amplitude_db.tolist()[0]
 
 
-def tempo(y, sr):
+def tempo(y, sr, hop=128):
     # Calculate the tempo of y
-    tempo = librosa.feature.tempo(y=y, sr=sr, hop_length=2**6, aggregate=None)
+    tempo = librosa.feature.tempo(y=y, sr=sr, hop_length=hop, aggregate=None)
 
-    # Print the tempo in BPM
-    min_tempo = tempo.min()
-    mean_tempo = tempo.mean()
-    max_tempo = tempo.max()
+    return tempo
 
-    return [min_tempo, mean_tempo, max_tempo]
+
+
+def pitch(y, sr, hop=128):
+    # Calculate the pitch
+    pitches, magnitudes = librosa.piptrack(y=y, sr=sr, hop_length=hop)
+
+    # Get the mean pitch per frame
+    mean_pitch = pitches.mean(axis=0)
+
+    # Convert the mean pitch per frame into Hz
+    pitches_in_hz = librosa.hz_to_midi(mean_pitch)
+
+    return pitches_in_hz
+
+def chroma(y, sr, hop=128):
+    chroma = librosa.feature.chroma_stft(y=y, sr=sr, hop_length=hop)
+
+    chroma = chroma.flatten()
+    return chroma
+
+
+def set_all(file):
+    # Load audio file with sample rate
+    y, sr = librosa.load(file)
+
+    hop_length = len(y) // 128
+
+    features = dynamics(y, hop=hop_length)
+    # Calculate several features
+    try:
+        features.extend(tempo(y, sr, hop=hop_length))
+        features.extend(pitch(y, sr, hop=hop_length))
+        features.extend(chroma(y, sr, hop=hop_length))
+        features = np.array(features)
+    except:
+        features = 0
+    return [file, features]
+
 
 
 def mfcc(y, sr):
@@ -54,39 +84,20 @@ def mfcc(y, sr):
     return mean_mfccs
 
 
-def chroma(y, sr):
-    chroma = librosa.feature.chroma_stft(y=y, sr=sr)
-    return chroma.mean(axis=1)
-
-
-def set_all(file):
-    # Load audio file with sample rate
-    y, sr = librosa.load(file)
-
-    features = [file]
-    # Calculate several features
-    features.extend(loudness_db(y))
-    features.extend(tempo(y, sr))
-    features.extend(mfcc(y, sr))
-    features.extend(chroma(y, sr))
-    print(len(features))
-    return features
-
-
-def set_mfcc(file):
+def set_single_feature(file):
     # Load audio file with sample rate
     y, sr = librosa.load(file)
 
     # Get 100 mfccs at regular intervals
     hop_length = len(y) // 100
-    mfccs = librosa.feature.mfcc(y=y, sr=sr, hop_length=hop_length, n_mfcc=20)
+    mfccs = librosa.feature.chroma_stft(y=y, sr=sr, hop_length=hop_length)
     return [file, mfccs]
 
 def worker(chunk):
     global chunks
     results = []
     for line in tqdm(chunk):
-        result = set_mfcc(line)
+        result = set_all(line)
         if result is not None:
             results.append(result)
     return results
@@ -121,4 +132,4 @@ if __name__ == '__main__':
 
     # Combine results from all chunks
     combined_results = [result for sublist in results_list for result in sublist]
-    pickle.dump(combined_results, open("features.pkl", "wb"))
+    pickle.dump(combined_results, open("features_all.pkl", "wb"))

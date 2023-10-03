@@ -13,6 +13,14 @@ def get_features(file):
     return feature_dict
 
 
+def combine_features(feature_dicts: list[dict]):
+    # combine all feature dicts that are stored in a list into one dict
+    combined = {}
+    for key in feature_dicts[0].keys():
+        combined[key] = np.array([x for f in feature_dicts for x in f[key]])
+    return combined
+
+
 def get_labels(file, restrict_to=None):
     raw = pickle.load(open(file, "rb"))
     label_dict = {}
@@ -32,9 +40,14 @@ def get_labels(file, restrict_to=None):
     return label_dict
 
 
-def get_train_test_split(restict_to=None):
-    features_raw = get_features("features_ext.pkl")
-    labels_raw = get_labels("split_genres.pkl", restrict_to=restict_to)
+def get_train_test_split(restict_to=None, input_features="features_ext.pkl", input_labels="split_genres.pkl"):
+    features_raw = get_features(input_features)
+    labels_raw = get_labels(input_labels, restrict_to=restict_to)
+
+    # mfcc = get_features("features_ext.pkl")
+    # chroma = get_features("features_chroma.pkl")
+
+    # features_raw = combine_features([mfcc, chroma])
 
     features = []
     labels = []
@@ -46,12 +59,17 @@ def get_train_test_split(restict_to=None):
     return train_test_split(features, labels, test_size=0.2, random_state=42, shuffle=True)
 
 
-if __name__ == '__main__':
-    # get the list of genres, sort them by count and display them
+def get_most_prevalent_genres(n=6):
     genres = pickle.load(open("split_genres.pkl", "rb"))
     genre_count = {}
     for genre in genres.keys():
         genre_count[genre] = len(genres[genre])
     genre_count = {k: v for k, v in sorted(genre_count.items(), key=lambda item: item[1], reverse=True)}
-    print(genre_count)
-    print(genre_count['Rock'])
+    # print the first n genres as well as the number of songs associated with them
+    for genre in list(genre_count.keys())[:n]:
+        print(f"{genre}: {genre_count[genre]}", end=" ")
+    return list(genre_count.keys())[:n]
+
+
+if __name__ == '__main__':
+    pass
