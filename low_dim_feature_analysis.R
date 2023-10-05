@@ -58,8 +58,8 @@ selected_columns <- sample(which(cluster_assignments_ld == 6), 5)
 print(metadata_ld["path", selected_columns])
 
 # This code prints a table for clusters in which the "path" column contains "NieR" 
-print(table(t(metadata_ld["cluster", grepl("NieR", metadata_ld["path",])])))
-print(table(t(metadata["cluster", grepl("NieR", metadata["path",])])))
+print(table(t(metadata_ld["cluster", grepl("BigRicePiano", metadata_ld["path",])])))
+print(table(t(metadata["cluster", grepl("BigRicePiano", metadata["path",])])))
 
 
 # calculate overlap between metadata['cluster', ] and metadata_ld['cluster', ]
@@ -78,7 +78,7 @@ for (i in 1:length(metadata['cluster', ])) {
 # find closet samples to 806
 dist_matrix <- as.matrix(dist_ld)
 
-target_label <- 806
+target_label <- 2773
 
 # Extract the distances for the target sample
 target_distances <- dist_matrix[target_label,]

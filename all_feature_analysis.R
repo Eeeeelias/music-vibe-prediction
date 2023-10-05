@@ -67,5 +67,5 @@ for (col_name in common_cols) {
 }
 
 # print 5 random columns of metadata that contain 8 as a cluster
-selected_columns <- sample(which(cluster_assignments == 6), 5)
-print(metadata["path", selected_columns])
+print(metadata["path", sample(which(cluster_assignments == 8), 5)])
+

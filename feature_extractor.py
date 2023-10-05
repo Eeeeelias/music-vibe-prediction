@@ -39,6 +39,18 @@ def tempo(y, sr, hop=128, single=False):
     return [tempo.mean()]
 
 
+# function to retrieve chroma information for an audio file at 100 regular intervals
+def chroma(y, sr, hop=128, single=False):
+    # Calculate the short-term Fourier transform
+    stft = np.abs(librosa.stft(y))
+
+    # Calculate the chroma
+    chroma = librosa.feature.chroma_stft(S=stft, sr=sr, hop_length=hop)
+
+    if not single:
+        return chroma
+    return [chroma.mean()]
+
 
 def pitch(y, sr, hop=128, single=False):
     # Calculate the pitch

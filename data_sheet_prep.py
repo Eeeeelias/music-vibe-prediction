@@ -24,7 +24,7 @@ def get_features(file):
 
 
 def make_data_sheets():
-    features = get_features("features_low_dim.pkl")
+    features = get_features("features_ext.pkl")
     labels = get_labels("split_genres.pkl")
 
     feature_sheet = []
@@ -37,7 +37,7 @@ def make_data_sheets():
         label_sheet.append(l_row)
 
     # write both sheets to a tsv file
-    with open("features_low_dim.tsv", "w", encoding='utf-8') as f:
+    with open("feature_mfcc.tsv", "w", encoding='utf-8') as f:
         for row in feature_sheet:
             f.write("\t".join([str(x) for x in row]) + "\n")
 
